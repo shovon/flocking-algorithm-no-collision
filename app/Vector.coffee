@@ -11,7 +11,7 @@ class window.Vector
       [@x,@y,@z] = [x,y,z]
 
     copy: ->
-      new Harry.Vector(@x,@y,@z)
+      new Vector(@x,@y,@z)
 
     magnitude: ->
       Math.sqrt(@x*@x + @y*@y + @z*@z)

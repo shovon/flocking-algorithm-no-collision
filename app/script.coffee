@@ -1,7 +1,10 @@
-window.SEPARATION_WEIGHT = 2
-window.ALIGNMENT_WEIGHT = 2
-window.COHESION_WEIGHT = 2
+window.SEPARATION_WEIGHT = 1
+window.ALIGNMENT_WEIGHT = 1
+window.COHESION_WEIGHT = 0.1
 window.MAX_SPEED = 2
+window.NEIGHBOUR_RADIUS = 40
+window.MAX_FORCE = 0.05
+window.DESIRED_SEPARATION = 20
 
 flock = (processing) ->
     processing.width = 850
