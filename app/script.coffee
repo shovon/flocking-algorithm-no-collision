@@ -4,10 +4,10 @@ window.COHESION_WEIGHT = 0.1
 window.MAX_SPEED = 2
 window.NEIGHBOUR_RADIUS = 40
 window.MAX_FORCE = 0.05
-window.DESIRED_SEPARATION = 20
+window.DESIRED_SEPARATION = 30
 
 flock = (processing) ->
-    processing.width = 850
+    processing.width = 855
     processing.height = 500
     start = new Vector processing.width/2, processing.height/2
 
@@ -17,7 +17,7 @@ flock = (processing) ->
     processing.draw = ->
         processing.background 255
         for boid, i in boids
-            boid.step(boids.slice(0, i).concat(boids.slice(i + 1, boids.length)))
+            boid.step(boids)
             boid.render()
         return true
 
