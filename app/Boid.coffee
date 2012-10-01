@@ -10,7 +10,7 @@ class window.Boid
         throw "A processing instance needs to be defined." if not options.processing?
 
         @processing = options.processing
-        @location   = options.location || new Vector @processing.width/2, @processing.height/2
+        @location   = options.location || new Vector @processing.width/2 - 400, @processing.height/2
         @velocity   = options.velocity || new Vector(Math.random()*2 - 1, Math.random()*2 - 1)
 
     step: (neighbours, cylinders)->
@@ -101,15 +101,20 @@ class window.Boid
 
     avoidCollision: (cylinders) ->
         mean = new Vector
-        count = 0
-
+        ###
         for cylinder in cylinders
-            distance = @location.distance(cylinder.location)
-            if distance > 0 and distance < DESIRED_SEPARATION + cylinder.radius*4
-                mean.add Vector.subtract(@location, cylinder.location).normalize().divide(distance*2)
-                count++
+            slopeBoid = (cylinder.location.y - @velocity.y)/(cylinder.location.x - @velocity.y)
+            yInterceptBoid = @velocity.y - slopeBoid*@velocity.x
 
-        mean.divide(count) if count > 0
+            slopeDiameter = -(1/slopeBoid)
+            yInterceptDiamter = cylinder.location.y - slopeDiameter*cylinder.location.x
+
+            lineInterceptX = (yInterceptDiameter - yInterceptBoid)/(slopeDiameter - slopeBoid)
+            lineInterceptY = slopeDiameter*lineInterceptX - yInterceptDiameter
+
+            Math.cos(Math.atan slopeDiameter)
+        ###
+
         return mean
 
     avoidWalls: ->
@@ -132,14 +137,23 @@ class window.Boid
         mean.divide(count) if count > 0
         return mean
 
+    toWayPoint: (target) ->
+        desired = Vector.subtract target, @location
+        desired.normalize()
+        desired.multiply(MAX_SPEED)
+        steer = desired.subtract(@velocity)
+        steer.limit(MAX_FORCE*2)
+        return steer
+
     flock: (neighbours, cylinders) ->
         separation     = @separate(neighbours).multiply(SEPARATION_WEIGHT)
         alignment      = @align(neighbours).multiply(ALIGNMENT_WEIGHT)
         cohesion       = @cohere(neighbours).multiply(COHESION_WEIGHT)
-        #avoidCollision = @avoidCollision(cylinders).multiply(AVOIDANCE_WEIGHT)
+        toWayPoint     = @toWayPoint(new Vector @processing.width, @processing.height/2).multiply(COHESION_WEIGHT)
+        avoidCollision = @avoidCollision(cylinders).multiply(AVOIDANCE_WEIGHT)
         #avoidWalls     = @avoidWalls().multiply(AVOIDANCE_WEIGHT)
         #return separation.add(alignment).add(cohesion).add(avoidCollision).add(avoidWalls);
-        return separation.add(alignment).add(cohesion);
+        return separation.add(alignment).add(cohesion).add(avoidCollision).add(toWayPoint);
         #return @velocity
 
     render: ->
