@@ -27,8 +27,6 @@ flock = (processing) ->
     processing.draw = ->
         processing.background 255
 
-
-
         for cylinder in cylinders
             cylinder.render()
         
@@ -39,23 +37,27 @@ flock = (processing) ->
 
         firstBoid = boids[0]
         normalizedVel = firstBoid.velocity.copy().normalize()
-        boidLineP1 = new Vector firstBoid.location.x, firstBoid.location.y
-        boidLineP2 = new Vector firstBoid.location.x + normalizedVel.x*200, firstBoid.location.y + normalizedVel.y*200
-        processing.line(boidLineP1.x, boidLineP1.y, boidLineP2.x, boidLineP2.y)
+        boidLine = new Line(
+            new Vector firstBoid.location.x, firstBoid.location.y
+            new Vector firstBoid.location.x + normalizedVel.x*200, firstBoid.location.y + normalizedVel.y*200
+        )
+        processing.line(boidLine.p1.x, boidLine.p1.y, boidLine.p2.x, boidLine.p2.y)
         processing.stroke(0)
         
         firstCylinder = cylinders[0]
         perpTheta = Math.atan2(-firstBoid.velocity.x, firstBoid.velocity.y)
-        cylinderLineP1 = new Vector firstCylinder.location.x, firstCylinder.location.y
-        cylinderLineP2 = new Vector firstCylinder.location.x + Math.cos(perpTheta)*200, firstCylinder.location.y + Math.sin(perpTheta)*200
-        processing.line(cylinderLineP1.x, cylinderLineP1.y, cylinderLineP2.x, cylinderLineP2.y)
-
-        
-        
+        cylinderLine = new Line(
+            new Vector firstCylinder.location.x, firstCylinder.location.y
+            new Vector firstCylinder.location.x + Math.cos(perpTheta)*200, firstCylinder.location.y + Math.sin(perpTheta)*200
+        )
+        processing.line(cylinderLine.p1.x, cylinderLine.p1.y, cylinderLine.p2.x, cylinderLine.p2.y)
         processing.stroke(0, 0, 0)
+
+        intersects = boidLine.intersects(cylinderLine)
+
         font = processing.loadFont("Arial")
         processing.textFont(font)
-        processing.text("Collide: false", 20, 20)
+        processing.text("Collide: " + intersects.toString(), 20, 20)
         processing.fill(0, 0, 0)
         
         return true
