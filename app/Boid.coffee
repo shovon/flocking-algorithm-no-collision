@@ -13,8 +13,8 @@ class window.Boid
         @location   = options.location || new Vector @processing.width/2, @processing.height/2
         @velocity   = options.velocity || new Vector(Math.random()*2 - 1, Math.random()*2 - 1)
 
-    step: (neighbours)->
-        acceleration = @flock(neighbours)
+    step: (neighbours, cylinders)->
+        acceleration = @flock(neighbours, cylinders)
         @velocity.add(acceleration).limit(MAX_SPEED)
         @location.add(@velocity)
         @_wrapIfNeeded()
@@ -99,10 +99,46 @@ class window.Boid
 
         return steer
 
-    flock: (neighbours) ->
-        separation = @separate(neighbours).multiply(SEPARATION_WEIGHT)
-        alignment  = @align(neighbours).multiply(ALIGNMENT_WEIGHT)
-        cohesion   = @cohere(neighbours).multiply(COHESION_WEIGHT)
+    avoidCollision: (cylinders) ->
+        mean = new Vector
+        count = 0
+
+        for cylinder in cylinders
+            distance = @location.distance(cylinder.location)
+            if distance > 0 and distance < DESIRED_SEPARATION + cylinder.radius*4
+                mean.add Vector.subtract(@location, cylinder.location).normalize().divide(distance*2)
+                count++
+
+        mean.divide(count) if count > 0
+        return mean
+
+    avoidWalls: ->
+        mean = new Vector
+        count = 0
+        walls = [
+            new Vector 0, @location.y
+            new Vector @processing.width, @location.y
+
+            new Vector @location.x, 0
+            new Vector @location.x, @processing.height
+        ]
+
+        for wall in walls
+            distance = @location.distance(wall)
+            if distance > 0 and distance < DESIRED_SEPARATION
+                mean.add Vector.subtract(@location, wall).normalize().divide(distance*2)
+                count++
+
+        mean.divide(count) if count > 0
+        return mean
+
+    flock: (neighbours, cylinders) ->
+        separation     = @separate(neighbours).multiply(SEPARATION_WEIGHT)
+        alignment      = @align(neighbours).multiply(ALIGNMENT_WEIGHT)
+        cohesion       = @cohere(neighbours).multiply(COHESION_WEIGHT)
+        #avoidCollision = @avoidCollision(cylinders).multiply(AVOIDANCE_WEIGHT)
+        #avoidWalls     = @avoidWalls().multiply(AVOIDANCE_WEIGHT)
+        #return separation.add(alignment).add(cohesion).add(avoidCollision).add(avoidWalls);
         return separation.add(alignment).add(cohesion);
         #return @velocity
 
