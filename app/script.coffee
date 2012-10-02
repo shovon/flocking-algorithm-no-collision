@@ -1,28 +1,29 @@
-window.SEPARATION_WEIGHT = 1
-window.ALIGNMENT_WEIGHT = 1
-window.COHESION_WEIGHT = 0.1
+window.SEPARATION_WEIGHT = 2
+window.ALIGNMENT_WEIGHT = 3
+window.COHESION_WEIGHT = 0.01
 window.MAX_SPEED = 2
-window.NEIGHBOUR_RADIUS = 40
+window.NEIGHBOUR_RADIUS = 60
 window.MAX_FORCE = 0.05
-window.DESIRED_SEPARATION = 20
+window.DESIRED_SEPARATION = 25
 window.AVOIDANCE_WEIGHT = 9
 window.BOID_VISION = 400
-window.OBJECT_RADIUS_EXCESS = 40
-window.SWERVE_WEIGHT = 2
+window.OBJECT_RADIUS_EXCESS = 10
+window.SWERVE_WEIGHT = 30
 
 flock = (processing) ->
     processing.width = 855
     processing.height = 500
     start = new Vector processing.width/2, processing.height/2
 
-    boids = for i in [1..100] #[new Boid { processing: processing }]
-        new Boid { processing: processing }
+    boidSpawnLoc = new Vector Math.random()*processing.width, Math.random()*processing.height
 
-    cylinders = [
-        new Cylinder { processing: processing, location: new Vector(processing.width / 2 + 50, processing.height / 2) }
-        #new Cylinder { processing: processing, radius: 10, location: new Vector(processing.width / 2 - 100, processing.height / 2 - 20)}
-    ]
-    #cylinders = []
+    boids = for i in [1..100] #[new Boid { processing: processing }]
+        new Boid
+            processing: processing
+            location: boidSpawnLoc.copy()
+
+    cylinders = for i in [1..4]
+        new Cylinder { processing: processing}
 
     if cylinders.length
         cylinders[0].mainBoid = boids[0]

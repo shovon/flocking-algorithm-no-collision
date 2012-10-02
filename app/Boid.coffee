@@ -203,13 +203,15 @@ class window.Boid
         separation        = @separate(neighbours).multiply(SEPARATION_WEIGHT)
         alignment         = @align(neighbours).multiply(ALIGNMENT_WEIGHT)
         cohesion          = @cohere(neighbours).multiply(COHESION_WEIGHT)
-        toWayPoint        = @toWayPoint(new Vector @processing.width, @processing.height/2).multiply(COHESION_WEIGHT)
+        #toWayPoint        = @toWayPoint(new Vector @processing.width, @processing.height/2).multiply(COHESION_WEIGHT)
         avoidCollision    = @avoidCollision(cylinders).multiply(AVOIDANCE_WEIGHT)
         swerveFromObjects = @swerveFromObjects(cylinders).multiply(SWERVE_WEIGHT)
         #avoidWalls     = @avoidWalls().multiply(AVOIDANCE_WEIGHT)
         #return separation.add(alignment).add(cohesion).add(avoidCollision).add(avoidWalls);
         #return separation.add(alignment).add(cohesion).add(avoidCollision).add(toWayPoint).add(swerveFromObjects);
-        return separation.add(alignment).add(cohesion).add(toWayPoint).add(avoidCollision).add(swerveFromObjects);
+        #return separation.add(alignment).add(cohesion).add(toWayPoint).add(avoidCollision).add(swerveFromObjects);
+        #return separation.add(alignment).add(cohesion).add(avoidCollision).add(swerveFromObjects);
+        return separation.add(alignment).add(cohesion).add(avoidCollision).add(swerveFromObjects);
         #return @velocity
 
     render: ->
