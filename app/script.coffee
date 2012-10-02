@@ -6,6 +6,9 @@ window.NEIGHBOUR_RADIUS = 40
 window.MAX_FORCE = 0.05
 window.DESIRED_SEPARATION = 20
 window.AVOIDANCE_WEIGHT = 9
+window.BOID_VISION = 400
+window.OBJECT_RADIUS_EXCESS = 40
+window.SWERVE_WEIGHT = 2
 
 flock = (processing) ->
     processing.width = 855
@@ -34,31 +37,40 @@ flock = (processing) ->
             boid.step(boids, cylinders)
             boid.render()
 
+        ###
 
         firstBoid = boids[0]
         normalizedVel = firstBoid.velocity.copy().normalize()
         boidLine = new Line(
             new Vector firstBoid.location.x, firstBoid.location.y
-            new Vector firstBoid.location.x + normalizedVel.x*200, firstBoid.location.y + normalizedVel.y*200
+            new Vector firstBoid.location.x + normalizedVel.x*BOID_VISION, firstBoid.location.y + normalizedVel.y*BOID_VISION
         )
         processing.line(boidLine.p1.x, boidLine.p1.y, boidLine.p2.x, boidLine.p2.y)
-        processing.stroke(0)
+        processing.stroke(0, 0, 0)
         
         firstCylinder = cylinders[0]
-        perpTheta = Math.atan2(-firstBoid.velocity.x, firstBoid.velocity.y)
-        cylinderLine = new Line(
+        perpTheta = -Math.atan2(-firstBoid.velocity.y, firstBoid.velocity.x) - Math.PI/2
+        cylinderLine1 = new Line(
             new Vector firstCylinder.location.x, firstCylinder.location.y
-            new Vector firstCylinder.location.x + Math.cos(perpTheta)*200, firstCylinder.location.y + Math.sin(perpTheta)*200
+            new Vector firstCylinder.location.x + Math.cos(perpTheta)*(firstCylinder.radius+OBJECT_RADIUS_EXCESS), firstCylinder.location.y + Math.sin(perpTheta)*(firstCylinder.radius+OBJECT_RADIUS_EXCESS)
         )
-        processing.line(cylinderLine.p1.x, cylinderLine.p1.y, cylinderLine.p2.x, cylinderLine.p2.y)
+        perpTheta = -Math.atan2(-firstBoid.velocity.y, firstBoid.velocity.x) + Math.PI/2
+        cylinderLine2 = new Line(
+            new Vector firstCylinder.location.x, firstCylinder.location.y
+            new Vector firstCylinder.location.x + Math.cos(perpTheta)*(firstCylinder.radius+OBJECT_RADIUS_EXCESS), firstCylinder.location.y + Math.sin(perpTheta)*(firstCylinder.radius+OBJECT_RADIUS_EXCESS)
+        )
+        processing.line(cylinderLine1.p1.x, cylinderLine1.p1.y, cylinderLine1.p2.x, cylinderLine1.p2.y)
+        processing.line(cylinderLine2.p1.x, cylinderLine2.p1.y, cylinderLine2.p2.x, cylinderLine2.p2.y)
         processing.stroke(0, 0, 0)
 
-        intersects = boidLine.intersects(cylinderLine)
+        intersects = boidLine.intersects(cylinderLine1)
+        intersects = intersects || boidLine.intersects(cylinderLine2)
 
         font = processing.loadFont("Arial")
         processing.textFont(font)
         processing.text("Collide: " + intersects.toString(), 20, 20)
         processing.fill(0, 0, 0)
+        ###
         
         return true
 
