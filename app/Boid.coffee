@@ -10,7 +10,7 @@ class window.Boid
         throw "A processing instance needs to be defined." if not options.processing?
 
         @processing = options.processing
-        @location   = options.location || new Vector @processing.width/2, @processing.height/2
+        @location   = options.location || new Vector @processing.width/2 - 400, @processing.height/2
         @velocity   = options.velocity || new Vector(Math.random()*2 - 1, Math.random()*2 - 1)
 
     step: (neighbours, cylinders)->
@@ -105,12 +105,71 @@ class window.Boid
 
         for cylinder in cylinders
             distance = @location.distance(cylinder.location)
-            if distance > 0 and distance < DESIRED_SEPARATION + cylinder.radius*4
-                mean.add Vector.subtract(@location, cylinder.location).normalize().divide(distance*2)
+            if distance > 0 and distance < DESIRED_SEPARATION + cylinder.radius
+                mean.add Vector.subtract(@location, cylinder.location).normalize().divide(distance)
                 count++
 
         mean.divide(count) if count > 0
         return mean
+
+    swerveFromObjects: (cylinders) ->
+        sum = new Vector
+        count = 0
+
+        for cylinder in cylinders
+            distance = @location.distance(cylinder.location)
+            if distance > 100
+                normalizedVel = @velocity.copy().normalize()
+
+                boidLine = new Line(
+                    new Vector @location.x, @location.y
+                    new Vector @location.x + normalizedVel.x*BOID_VISION, @location.y + normalizedVel.y*BOID_VISION
+                )
+
+                # The theta of the circle's perpendicular line.
+                perpTheta = -Math.atan2(-@velocity.y, @velocity.x) + Math.PI/2
+                line1 = new Line(
+                    new Vector cylinder.location.x, cylinder.location.y
+                    new Vector cylinder.location.x + Math.cos(perpTheta)*(cylinder.radius+OBJECT_RADIUS_EXCESS), cylinder.location.y + Math.sin(perpTheta)*(cylinder.radius+OBJECT_RADIUS_EXCESS)
+                )
+                perpTheta = -Math.atan2(-@velocity.y, @velocity.x) - Math.PI/2
+                line2 = new Line(
+                    new Vector cylinder.location.x, cylinder.location.y
+                    new Vector cylinder.location.x + Math.cos(perpTheta)*(cylinder.radius+OBJECT_RADIUS_EXCESS), cylinder.location.y + Math.sin(perpTheta)*(cylinder.radius+OBJECT_RADIUS_EXCESS)
+                )
+
+                intersects = boidLine.intersects(line1)
+                intersects = intersects || boidLine.intersects(line2)
+
+                if intersects
+                    #mean.add Vector.subtract(@location, cylinder.location).normalize().divide(distance/2)
+                    
+                    desired = new Vector
+
+                    # Try to find the closest extremity
+                    if @location.distance(line1.p2) <= @location.distance(line2.p2)
+                        sum.add line1.p2
+                    else
+                        sum.add line2.p2
+
+                    count++
+
+                #@processing.line line1.p1.x, line1.p1.y, line1.p2.x, line1.p2.y
+                #@processing.line line2.p1.x, line2.p1.y, line2.p2.x, line2.p2.y
+
+                ###
+                @processing.line boidLine.p1.x, boidLine.p1.y, boidLine.p2.x, boidLine.p2.y
+                
+                font = @processing.loadFont("Arial")
+                @processing.textFont(font)
+                @processing.text(intersects.toString(), @location.x - 20, @location.y - 20)
+                @processing.fill(0, 0, 0)
+                ###
+
+        if count > 0
+            return @steer_to sum.divide(count)
+        
+        return sum
 
     avoidWalls: ->
         mean = new Vector
@@ -132,14 +191,27 @@ class window.Boid
         mean.divide(count) if count > 0
         return mean
 
+    toWayPoint: (target) ->
+        desired = Vector.subtract target, @location
+        desired.normalize()
+        desired.multiply(MAX_SPEED)
+        steer = desired.subtract(@velocity)
+        steer.limit(MAX_FORCE*2)
+        return steer
+
     flock: (neighbours, cylinders) ->
-        separation     = @separate(neighbours).multiply(SEPARATION_WEIGHT)
-        alignment      = @align(neighbours).multiply(ALIGNMENT_WEIGHT)
-        cohesion       = @cohere(neighbours).multiply(COHESION_WEIGHT)
-        #avoidCollision = @avoidCollision(cylinders).multiply(AVOIDANCE_WEIGHT)
+        separation        = @separate(neighbours).multiply(SEPARATION_WEIGHT)
+        alignment         = @align(neighbours).multiply(ALIGNMENT_WEIGHT)
+        cohesion          = @cohere(neighbours).multiply(COHESION_WEIGHT)
+        #toWayPoint        = @toWayPoint(new Vector @processing.width, @processing.height/2).multiply(COHESION_WEIGHT)
+        avoidCollision    = @avoidCollision(cylinders).multiply(AVOIDANCE_WEIGHT)
+        swerveFromObjects = @swerveFromObjects(cylinders).multiply(SWERVE_WEIGHT)
         #avoidWalls     = @avoidWalls().multiply(AVOIDANCE_WEIGHT)
         #return separation.add(alignment).add(cohesion).add(avoidCollision).add(avoidWalls);
-        return separation.add(alignment).add(cohesion);
+        #return separation.add(alignment).add(cohesion).add(avoidCollision).add(toWayPoint).add(swerveFromObjects);
+        #return separation.add(alignment).add(cohesion).add(toWayPoint).add(avoidCollision).add(swerveFromObjects);
+        #return separation.add(alignment).add(cohesion).add(avoidCollision).add(swerveFromObjects);
+        return separation.add(alignment).add(cohesion).add(avoidCollision).add(swerveFromObjects);
         #return @velocity
 
     render: ->

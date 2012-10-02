@@ -8,9 +8,9 @@ class window.Cylinder
         throw "A processing instance needs to be defined." if not options.processing?
 
         @processing = options.processing
-        @radius = options.radius || @radius
-        @location = options.location || new Vector(@processing.width/2 + 100, @processing.height/2)
-        @location
+        @radius = options.radius || Math.floor Math.random()*40
+        @location = options.location || new Vector(Math.floor(Math.random()*@processing.width + 5), Math.floor(Math.random()*@processing.height + 5))
+        return
 
     render: ->
         @processing.fill(128, 255, 128)
