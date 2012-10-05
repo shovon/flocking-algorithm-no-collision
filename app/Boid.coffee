@@ -99,13 +99,27 @@ class window.Boid
 
         return steer
 
+    swerve_to: (target) ->
+        desired = Vector.subtract(target, @location)
+        distance = desired.magnitude()
+        swerve = new Vector
+
+        if distance > 0
+            desired.normalize()
+            desired.multiply(MAX_SPEED*(1/distance))
+
+            swerve = desired.subtract(@velocity)
+            swerve.limit(MAX_FORCE)
+
+        return swerve
+
     avoidCollision: (cylinders) ->
         mean = new Vector
         count = 0
 
         for cylinder in cylinders
             distance = @location.distance(cylinder.location)
-            if distance > 0 and distance < DESIRED_SEPARATION + cylinder.radius
+            if distance > 0 and distance < cylinder.radius + 10 #DESIRED_SEPARATION + cylinder.radius
                 mean.add Vector.subtract(@location, cylinder.location).normalize().divide(distance)
                 count++
 
@@ -203,7 +217,7 @@ class window.Boid
         separation        = @separate(neighbours).multiply(SEPARATION_WEIGHT)
         alignment         = @align(neighbours).multiply(ALIGNMENT_WEIGHT)
         cohesion          = @cohere(neighbours).multiply(COHESION_WEIGHT)
-        #toWayPoint        = @toWayPoint(new Vector @processing.width, @processing.height/2).multiply(COHESION_WEIGHT)
+        toWayPoint        = @toWayPoint(new Vector @processing.width, @processing.height/2).multiply(WAYPOINT_WEIGHT)
         avoidCollision    = @avoidCollision(cylinders).multiply(AVOIDANCE_WEIGHT)
         swerveFromObjects = @swerveFromObjects(cylinders).multiply(SWERVE_WEIGHT)
         #avoidWalls     = @avoidWalls().multiply(AVOIDANCE_WEIGHT)
@@ -211,7 +225,7 @@ class window.Boid
         #return separation.add(alignment).add(cohesion).add(avoidCollision).add(toWayPoint).add(swerveFromObjects);
         #return separation.add(alignment).add(cohesion).add(toWayPoint).add(avoidCollision).add(swerveFromObjects);
         #return separation.add(alignment).add(cohesion).add(avoidCollision).add(swerveFromObjects);
-        return separation.add(alignment).add(cohesion).add(avoidCollision).add(swerveFromObjects);
+        return separation.add(alignment).add(cohesion).add(avoidCollision).add(swerveFromObjects).add(toWayPoint)
         #return @velocity
 
     render: ->

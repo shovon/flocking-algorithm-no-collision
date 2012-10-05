@@ -1,14 +1,15 @@
 window.SEPARATION_WEIGHT = 2
-window.ALIGNMENT_WEIGHT = 3
+window.ALIGNMENT_WEIGHT = 1
 window.COHESION_WEIGHT = 0.01
 window.MAX_SPEED = 2
 window.NEIGHBOUR_RADIUS = 60
 window.MAX_FORCE = 0.05
 window.DESIRED_SEPARATION = 25
-window.AVOIDANCE_WEIGHT = 9
+window.AVOIDANCE_WEIGHT = 100
 window.BOID_VISION = 400
-window.OBJECT_RADIUS_EXCESS = 10
-window.SWERVE_WEIGHT = 30
+window.OBJECT_RADIUS_EXCESS = 60
+window.SWERVE_WEIGHT = 1
+window.WAYPOINT_WEIGHT = 0.1
 
 flock = (processing) ->
     processing.width = 855
@@ -22,8 +23,8 @@ flock = (processing) ->
             processing: processing
             location: boidSpawnLoc.copy()
 
-    cylinders = for i in [1..4]
-        new Cylinder { processing: processing}
+    cylinders = for i in [1..1]
+        new Cylinder { radius: 20, processing: processing, location: new Vector processing.width / 2, processing.height / 2 }
 
     if cylinders.length
         cylinders[0].mainBoid = boids[0]
@@ -39,7 +40,6 @@ flock = (processing) ->
             boid.render()
 
         ###
-
         firstBoid = boids[0]
         normalizedVel = firstBoid.velocity.copy().normalize()
         boidLine = new Line(
